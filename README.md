@@ -3,7 +3,7 @@ Simple web apps for booking tennis stadium for one hour per user between 09:00 u
 
 # Setup
 * Install database
-** table
+1. table
 
 ```
 CREATE TABLE `booking` (
@@ -16,6 +16,6 @@ CREATE TABLE `booking` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ```
-** update database connection in booking.php
+2. update database connection in booking.php
 
 * Run the server with this folder as main directory, then access index.html
