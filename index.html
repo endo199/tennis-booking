@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Tennis Stadium Booking Site</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <style>
+        #bookingList2 span {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        #bookingList2 a {
+            margin-right: 10%;
+            font-size: larger;
+            color: #fff;
+        }
+        
+        #bookingList2 a:hover {
+            text-decoration: none;
+        }
+    </style>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+    <div class="container-fluid">
+        <h1>
+            Book your spot now !!! 
+            <button type="button" class="btn btn-primary btn-sm pull-right" data-toggle="modal" data-target="#myModal">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Booking
+            </button>
+        </h1>
+
+        <div id="bookingList2" class="progress">
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Booking Tennis Stadium</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form method="post" action="bookingOps.php">
+                            <div class="alert hidden" role="alert"></div>
+                            <input type="hidden" id="bookingId" name="booking[id]" value="" />
+                            <div class="form-group">
+                                <label for="name">Name</label>
+                                <input type="text" class="form-control" id="name" name="booking[name]" placeholder="Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email address</label>
+                                <input type="email" class="form-control" id="email" name="booking[email]" placeholder="Email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="start">Time (between 09:00 - 20:00) </label>
+                                <input type="time" class="form-control" id="start" name="booking[start]" placeholder="HH:mm" pattern="\d{2}:\d{2}" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.min.js"></script>
+
+    <script type="text/javascript">
+        var PLAY_DURATION = 60; // 60 minutes
+        var DURATION_BEFORE_FIRST_GAME = moment.duration('08:00:00').asMinutes();
+        var ONE_HOUR_DURATION = 60;
+
+        function randomHexColor() {
+            return Math.floor(Math.random() * 16777215).toString(16);
+        }
+
+        $(document).ready(function () {
+
+            $.getJSON('bookingOps.php', {
+                'ops': 'all'
+            }, function (data) {
+                var list2 = $('#bookingList2');
+                var style = "";
+                var time = DURATION_BEFORE_FIRST_GAME; // one hour before first play begin
+
+                $.each(data, function (key, val) {
+
+                    style += "background-color: #" + randomHexColor() + ";";
+
+                    var duration = moment.duration(val.start).asMinutes();
+                    style += "margin-left: " + ((duration - time - PLAY_DURATION) / ONE_HOUR_DURATION * 8.33) + "%;"
+                    time = duration;
+
+                    var tooltip = "data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"" + val.start.substr(0, 5) + " - " + val.end.substr(0, 5) + "\"";
+
+                    list2.append("<div id='" + val.id + "' class=\"progress-bar\" style=\"width: 8.33%;" + style + "\"><span " + tooltip + ">" + val.name + "</span> <a href='#' class='pull-right' title='delete'>&times;</a></div>");
+                    style = "";
+                });
+
+                $('[data-toggle="tooltip"]').tooltip();
+            });
+        });
+
+        $('#bookingList2').on('click', 'div', function (evt) {
+            evt.preventDefault();
+
+            var id = $(this).attr('id');
+            $.getJSON('bookingOps.php', {
+                'ops': 'get',
+                'id': id
+            }, function (data) {
+                $('#bookingId').val(data.id);
+                $('#name').val(data.name);
+                $('#email').val(data.email);
+
+                var mStart = moment(data.start, 'H:mm:ss');
+                $('#start').val(mStart.format('H:mm'));
+
+                $('#myModal').modal('show');
+            });
+        });
+        
+        $('#bookingList2').on('click', 'div a', function (evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            
+            var id = $(this).parent().attr('id');
+            if(confirm("Delete this booking?")) {
+                $.post('bookingOps.php', {
+                    'ops': 'delete',
+                    'id': id
+                }, function(data){
+                    if (!data.status) {
+                        alert(data.message);
+                    } else {
+                        alert("Success deleting a booking");
+                        window.location.reload();
+                    }
+                }, 'json');
+            }
+        });
+
+        $('form').submit(function (evt) {
+            evt.preventDefault();
+
+            var ops = "";
+            var theMessage = "";
+            var bookingId = $('#bookingId', $(this)).val();
+            if (bookingId) {
+                ops = 'ops=update&';
+                theMessage = "Successfully updating a booking";
+            } else {
+                ops = 'ops=insert&';
+                theMessage = "Successfully adding new booking";
+            }
+
+            $.post(
+                $(this).attr('action'),
+                ops + $(this).serialize(),
+                function (data) {
+                    if (!data.status) {
+                        $('form .alert').html(data.message).removeClass('alert-success').addClass('alert-danger').removeClass('hidden');
+                    } else {
+                        $('form .alert').html(theMessage).removeClass('alert-danger').addClass('alert-success').removeClass('hidden');
+                        $('form').get(0).reset();
+
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 3000);
+                    }
+                },
+                'json'
+            );
+        });
+
+        $('#myModal').on('hidden.bs.modal', function (e) {
+            // clear the form
+            $('form input').val('');
+        })
+    </script>
+</body>
+
+</html>
